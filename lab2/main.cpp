@@ -31,6 +31,9 @@ int main(const int argc, char **argv) {
 
     try {
         auto originalBMP = ReadBMP(inputFilePath);
+        if (originalBMP.infoHeader.bitCount != 16) {
+            throw std::invalid_argument("Bit count must be equals to 16");
+        }
         SetCoreCount(coreCount);
         const auto blurredBMP = BlurBMP(originalBMP, threadCount);
         WriteBMP(outputFilePath, blurredBMP);
