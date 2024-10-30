@@ -84,9 +84,9 @@ inline void SetCoreCount(unsigned count) {
     }
 
     const auto hProcess = GetCurrentProcess();
-    const auto mask = static_cast<DWORD_PTR>(std::pow(2, count) - 1);
+    const auto mask = (1 << count) - 1;
 
-    SetThreadAffinityMask(hProcess, mask);
+    SetProcessAffinityMask(hProcess, mask);
 }
 
 struct ThreadData {
@@ -98,34 +98,37 @@ struct ThreadData {
 
 inline DWORD WINAPI BlurSection(const LPVOID param) {
     const ThreadData *data = static_cast<ThreadData *>(param);
-    const BMPImage *bmpImage = data->bmpImage;
+    const BMPImage *sourceImage = data->bmpImage;
     BMPImage *blurredImage = data->blurredImage;
     const int startRow = data->startRow;
     const int endRow = data->endRow;
 
-    const int width = bmpImage->infoHeader.width;
-    const int height = bmpImage->infoHeader.height;
-    const int bytesPerPixel = bmpImage->infoHeader.bitCount / 8;
+    const int width = sourceImage->infoHeader.width;
+    const int height = sourceImage->infoHeader.height;
+    const int bytesPerPixel = sourceImage->infoHeader.bitCount / 8;
 
     for (int y = startRow; y < endRow; ++y) {
         for (int x = 0; x < width; ++x) {
-            int r = 0, g = 0, b = 0, count = 0;
-            for (int ky = -1; ky <= 1; ++ky) {
-                for (int kx = -1; kx <= 1; ++kx) {
-                    const int ny = y + ky;
-                    if (const int nx = x + kx; nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                        const int index = (ny * width + nx) * bytesPerPixel;
-                        b += bmpImage->pixelData[index];
-                        g += bmpImage->pixelData[index + 1];
-                        r += bmpImage->pixelData[index + 2];
-                        count++;
+            int redSum = 0, greenSum = 0, blueSum = 0, pixelCount = 0;
+            for (int offsetY = -1; offsetY <= 1; ++offsetY) {
+                for (int offsetX = -1; offsetX <= 1; ++offsetX) {
+                    const int neighborY = y + offsetY;
+                    const int neighborX = x + offsetX;
+
+                    if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height) {
+                        const int index = (neighborY * width + neighborX) * bytesPerPixel;
+                        blueSum += sourceImage->pixelData[index];
+                        greenSum += sourceImage->pixelData[index + 1];
+                        redSum += sourceImage->pixelData[index + 2];
+                        pixelCount++;
                     }
                 }
             }
-            int index = (y * width + x) * bytesPerPixel;
-            blurredImage->pixelData[index] = b / count;
-            blurredImage->pixelData[index + 1] = g / count;
-            blurredImage->pixelData[index + 2] = r / count;
+
+            int currentPixelIndex = (y * width + x) * bytesPerPixel;
+            blurredImage->pixelData[currentPixelIndex] = blueSum / pixelCount;
+            blurredImage->pixelData[currentPixelIndex + 1] = greenSum / pixelCount;
+            blurredImage->pixelData[currentPixelIndex + 2] = redSum / pixelCount;
         }
     }
 
