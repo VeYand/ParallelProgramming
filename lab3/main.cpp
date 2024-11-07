@@ -46,9 +46,6 @@ int main() {
     std::string temp;
     std::cin >> temp;
     std::ofstream logFile("log.txt");
-    std::ofstream logFile1("log1.txt");
-    std::ofstream logFile2("log2.txt");
-
 
     if (!logFile.is_open()) {
         std::cerr << "Unable to open log file" << std::endl;
@@ -63,13 +60,13 @@ int main() {
 
     auto *handles = new HANDLE[2];
     const auto startTime = std::chrono::high_resolution_clock::now();
-    ThreadData data1 = {1, startTime, &logFile1, &semaphore};
-    ThreadData data2 = {2, startTime, &logFile2, &semaphore};
+    ThreadData data1 = {1, startTime, &logFile, &semaphore};
+    ThreadData data2 = {2, startTime, &logFile, &semaphore};
 
     handles[0] = CreateThread(nullptr, 0, ThreadFunction, &data1, 0, nullptr);
     handles[1] = CreateThread(nullptr, 0, ThreadFunction, &data2, 0, nullptr);
 
-    SetThreadPriority(handles[0], THREAD_PRIORITY_HIGHEST);
+    SetThreadPriority(handles[0], THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriority(handles[1], THREAD_PRIORITY_NORMAL);
 
     WaitForMultipleObjects(2, handles, TRUE, INFINITE);

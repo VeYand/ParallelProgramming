@@ -84,9 +84,9 @@ inline void SetCoreCount(unsigned count) {
     }
 
     const auto hProcess = GetCurrentProcess();
-    const auto mask = (1 << count) - 1;
+    const auto mask = static_cast<DWORD_PTR>(pow(2, count) - 1);
 
-    SetProcessAffinityMask(hProcess, mask);
+    SetThreadAffinityMask(hProcess, mask);
 }
 
 struct ThreadData {

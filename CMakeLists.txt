@@ -17,3 +17,6 @@ add_executable(lab2
 add_executable(lab3
         lab3/main.cpp
 )
+add_executable(lab4
+        lab4/main.cpp
+)
