@@ -36,6 +36,7 @@ void Deposit(int money) {
 
 void Withdraw(int money) {
     int balance = GetBalance();
+    Sleep(20);
     if (balance < money) {
         printf("Cannot withdraw money, balance lower than %d\n", money);
     } else {
