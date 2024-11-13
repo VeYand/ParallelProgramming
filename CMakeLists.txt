@@ -19,4 +19,5 @@ add_executable(lab3
 )
 add_executable(lab4
         lab4/main.cpp
+        lab4/BMPUtils.h
 )
