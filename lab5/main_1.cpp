@@ -2,20 +2,25 @@
 #include <string>
 #include <fstream>
 
-CRITICAL_SECTION FileLockingCriticalSection;
+CRITICAL_SECTION FileReadingLockingCriticalSection;
+CRITICAL_SECTION FileWritingLockingCriticalSection;
 
 int ReadFromFile() {
+    EnterCriticalSection(&FileReadingLockingCriticalSection);
     std::fstream myfile("balance.txt", std::ios_base::in);
     int result = 0;
     myfile >> result;
     myfile.close();
+    LeaveCriticalSection(&FileReadingLockingCriticalSection);
     return result;
 }
 
 void WriteToFile(int data) {
+    EnterCriticalSection(&FileWritingLockingCriticalSection);
     std::fstream myfile("balance.txt", std::ios_base::out);
     myfile << data << std::endl;
     myfile.close();
+    LeaveCriticalSection(&FileWritingLockingCriticalSection);
 }
 
 int GetBalance() {
@@ -23,16 +28,13 @@ int GetBalance() {
 }
 
 void Deposit(int money) {
-    EnterCriticalSection(&FileLockingCriticalSection);
     int balance = GetBalance();
     balance += money;
     WriteToFile(balance);
     printf("Balance after deposit: %d\n", balance);
-    LeaveCriticalSection(&FileLockingCriticalSection);
 }
 
 void Withdraw(int money) {
-    EnterCriticalSection(&FileLockingCriticalSection);
     int balance = GetBalance();
     if (balance < money) {
         printf("Cannot withdraw money, balance lower than %d\n", money);
@@ -41,7 +43,6 @@ void Withdraw(int money) {
         WriteToFile(balance);
         printf("Balance after withdraw: %d\n", balance);
     }
-    LeaveCriticalSection(&FileLockingCriticalSection);
 }
 
 DWORD WINAPI DoDeposit(CONST LPVOID lpParameter) {
@@ -56,7 +57,8 @@ DWORD WINAPI DoWithdraw(CONST LPVOID lpParameter) {
 
 int main() {
     HANDLE handles[50];
-    InitializeCriticalSection(&FileLockingCriticalSection);
+    InitializeCriticalSection(&FileReadingLockingCriticalSection);
+    InitializeCriticalSection(&FileWritingLockingCriticalSection);
     WriteToFile(0);
 
     SetProcessAffinityMask(GetCurrentProcess(), 1);
@@ -76,7 +78,8 @@ int main() {
         CloseHandle(handle);
     }
 
-    DeleteCriticalSection(&FileLockingCriticalSection);
+    DeleteCriticalSection(&FileWritingLockingCriticalSection);
+    DeleteCriticalSection(&FileReadingLockingCriticalSection);
 
     return 0;
 }
