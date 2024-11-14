@@ -2,25 +2,24 @@
 #include <string>
 #include <fstream>
 
-CRITICAL_SECTION FileReadingLockingCriticalSection;
-CRITICAL_SECTION FileWritingLockingCriticalSection;
+CRITICAL_SECTION FileLockingCriticalSection;
 
 int ReadFromFile() {
-    EnterCriticalSection(&FileReadingLockingCriticalSection);
+    EnterCriticalSection(&FileLockingCriticalSection);
     std::fstream myfile("balance.txt", std::ios_base::in);
     int result = 0;
     myfile >> result;
     myfile.close();
-    LeaveCriticalSection(&FileReadingLockingCriticalSection);
+    LeaveCriticalSection(&FileLockingCriticalSection);
     return result;
 }
 
 void WriteToFile(int data) {
-    EnterCriticalSection(&FileWritingLockingCriticalSection);
+    EnterCriticalSection(&FileLockingCriticalSection);
     std::fstream myfile("balance.txt", std::ios_base::out);
     myfile << data << std::endl;
     myfile.close();
-    LeaveCriticalSection(&FileWritingLockingCriticalSection);
+    LeaveCriticalSection(&FileLockingCriticalSection);
 }
 
 int GetBalance() {
@@ -58,8 +57,7 @@ DWORD WINAPI DoWithdraw(CONST LPVOID lpParameter) {
 
 int main() {
     HANDLE handles[50];
-    InitializeCriticalSection(&FileReadingLockingCriticalSection);
-    InitializeCriticalSection(&FileWritingLockingCriticalSection);
+    InitializeCriticalSection(&FileLockingCriticalSection);
     WriteToFile(0);
 
     SetProcessAffinityMask(GetCurrentProcess(), 1);
@@ -79,8 +77,7 @@ int main() {
         CloseHandle(handle);
     }
 
-    DeleteCriticalSection(&FileWritingLockingCriticalSection);
-    DeleteCriticalSection(&FileReadingLockingCriticalSection);
+    DeleteCriticalSection(&FileLockingCriticalSection);
 
     return 0;
 }

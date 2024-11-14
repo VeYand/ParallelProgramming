@@ -3,25 +3,24 @@
 #include <fstream>
 #include <iostream>
 
-HANDLE FileReadingMutex;
-HANDLE FileWritingMutex;
+HANDLE FileMutex;
 
 int ReadFromFile() {
-    WaitForSingleObject(FileReadingMutex, INFINITE);
+    WaitForSingleObject(FileMutex, INFINITE);
     std::fstream myfile("balance.txt", std::ios_base::in);
     int result = 0;
     myfile >> result;
     myfile.close();
-    ReleaseMutex(FileReadingMutex);
+    ReleaseMutex(FileMutex);
     return result;
 }
 
 void WriteToFile(int data) {
-    WaitForSingleObject(FileWritingMutex, INFINITE);
+    WaitForSingleObject(FileMutex, INFINITE);
     std::fstream myfile("balance.txt", std::ios_base::out);
     myfile << data << std::endl;
     myfile.close();
-    ReleaseMutex(FileWritingMutex);
+    ReleaseMutex(FileMutex);
 }
 
 int GetBalance() {
@@ -61,11 +60,10 @@ DWORD WINAPI DoWithdraw(CONST LPVOID lpParameter) {
 int main() {
     HANDLE handles[50];
 
-    FileReadingMutex = CreateMutex(NULL, FALSE, reinterpret_cast<LPCSTR>(L"Global\\FileReadingMutex"));
-    FileWritingMutex = CreateMutex(NULL, FALSE, reinterpret_cast<LPCSTR>(L"Global\\FileWritingMutex"));
+    FileMutex = CreateMutex(NULL, FALSE, reinterpret_cast<LPCSTR>(L"Global\\FileReadingMutex"));
 
     WriteToFile(0);
-    SetProcessAffinityMask(GetCurrentProcess(), 1);
+    // SetProcessAffinityMask(GetCurrentProcess(), 1);
 
     for (int i = 0; i < 50; i++) {
         handles[i] = (i % 2 == 0)
@@ -81,8 +79,7 @@ int main() {
         CloseHandle(handle);
     }
 
-    CloseHandle(FileReadingMutex);
-    CloseHandle(FileWritingMutex);
+    CloseHandle(FileMutex);
 
     return 0;
 }
