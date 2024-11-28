@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <vector>
 
@@ -39,24 +40,53 @@ std::vector<std::vector<int> > MultiplyMatrices(
     return resultMatrix;
 }
 
+template<typename Func>
+void measureTime(Func &&func) {
+    const auto start = std::chrono::high_resolution_clock::now();
+    std::forward<Func>(func)();
+    const auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+
+    std::cout << "Time taken: " << duration.count() << " seconds" << std::endl;
+}
+
+std::vector<std::vector<int>> generateRandomMatrix(const unsigned size, const int minValue, const int maxValue) {
+    std::vector matrix(size, std::vector<int>(size));
+
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            matrix[i][j] = minValue + rand() % (maxValue - minValue + 1);
+        }
+    }
+
+    return matrix;
+}
+
 int main() {
     unsigned size;
 
     std::cout << "Enter the size of the matrices: ";
     std::cin >> size;
-
     std::vector<std::vector<int> > firstMatrix, secondMatrix;
 
-    std::cout << "Enter elements of first matrix:" << std::endl;
-    ReadSquareMatrix(std::cin, firstMatrix, size);
+    if (false) {
+        std::cout << "Enter elements of first matrix:" << std::endl;
+        ReadSquareMatrix(std::cin, firstMatrix, size);
 
-    std::cout << "Enter elements of second matrix:" << std::endl;
-    ReadSquareMatrix(std::cin, secondMatrix, size);
+        std::cout << "Enter elements of second matrix:" << std::endl;
+        ReadSquareMatrix(std::cin, secondMatrix, size);
+    }
+    if (true) {
+        firstMatrix = generateRandomMatrix(size, -100, 100);
+        secondMatrix = generateRandomMatrix(size, -100, 100);
+    }
 
-    const std::vector<std::vector<int> > resultMatrix = MultiplyMatrices(firstMatrix, secondMatrix);
+    measureTime([&]() {
+        const std::vector<std::vector<int> > resultMatrix = MultiplyMatrices(firstMatrix, secondMatrix);
+        std::cout << "Resulting matrix:" << std::endl;
+        // WriteSquareMatrix(std::cout, resultMatrix);
+    });
 
-    std::cout << "Resulting matrix:" << std::endl;
-    WriteSquareMatrix(std::cout, resultMatrix);
 
     return 0;
 }
