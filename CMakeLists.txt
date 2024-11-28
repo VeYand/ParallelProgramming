@@ -27,3 +27,20 @@ add_executable(lab5_1
 add_executable(lab5_2
         lab5/main_2.cpp
 )
+
+find_package(OpenMP REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+add_executable(lab6_1
+        lab6/main_1.cpp
+)
+add_executable(lab6_2
+        lab6/main_2.cpp
+)
+add_executable(lab6_3
+        lab6/main_3.cpp
+)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(lab6_1 PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(lab6_2 PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(lab6_3 PRIVATE OpenMP::OpenMP_CXX)
+endif()
